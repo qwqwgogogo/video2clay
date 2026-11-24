@@ -1,0 +1,12 @@
+# 运行时依赖（跑转换）
+# Windows 显卡加速：onnxruntime-directml（NVIDIA / AMD / Intel 均可，需 DX12）
+# NVIDIA + CUDA 用户也可以换成 onnxruntime-gpu
+onnxruntime-directml>=1.20
+numpy>=1.26
+scipy>=1.11
+pillow>=10.0
+
+# 仅“自己导出 ONNX 模型”时才需要（体积很大，普通使用可跳过）：
+# torch>=2.4
+# transformers>=4.45
+# onnx>=1.16
