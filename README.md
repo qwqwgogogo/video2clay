@@ -36,10 +36,16 @@
 
 ## 快速开始
 
-### 方式一：直接用便携版（推荐给不想折腾的人）
+### 方式一：打包成便携版（推荐发给不想装环境的人）
 
-从 [Releases](../../releases) 下载 `视频转白膜_便携版.zip`，解压后双击 **`启动白膜转换器.bat`** 即可。
-包内已内置 Python、依赖、模型和 ffmpeg，约 1.7GB，不需要安装任何东西。
+本机装好 `uv` 或 `pip`，再准备一份含 tkinter 的 Python 3.10+，然后：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build_portable.ps1 -Zip
+```
+
+产出 `build\视频转白膜_便携版\`（约 1.7GB：内置 Python、依赖、模型、ffmpeg）。
+拷给别人后解压、双击 **`启动白膜转换器.bat`** 即可，对方电脑不需要装任何东西。
 
 ### 方式二：源码运行
 
@@ -53,9 +59,7 @@ pip install -r requirements.txt
 
 准备好两样东西：
 
-1. **模型** `models/depth_anything_v2_large.onnx`
-   - 从 [Releases](../../releases) 下载 `depth_anything_v2_large_756.onnx` 放进 `models/` 并改名；或
-   - 自己导出，见下方「模型准备」
+1. **模型** `models/depth_anything_v2_large.onnx` —— 需要本地导出一次，见下方「模型准备」
 2. **ffmpeg**
    - 装了并在 PATH 里就能直接用；否则把 `ffmpeg.exe` 放到 `ffmpeg/` 或 `bin/` 子目录
 
@@ -73,23 +77,16 @@ Windows 用户也可以双击 `run_gui.bat`，或把视频拖到 `convert_drag.b
 ## 模型准备
 
 深度模型用的是 [Depth Anything V2 Large](https://github.com/DepthAnything/Depth-Anything-V2)（1.28GB）。
-仓库里不放权重，两种获取方式：
-
-**A. 直接下载预编译 ONNX**
-
-从 [Releases](../../releases) 页面下载 `depth_anything_v2_large_756.onnx`（1.25GB），放到 `models/` 目录。
-
-**B. 自己从原模型导出**
+仓库里不放权重（体积 + 许可原因），需要本地导出一次：
 
 ```bash
 pip install torch transformers onnx
 
-# 1) 从 ModelScope 下原版权重（国内可达； huggingface 需要科学上网）
-#    https://modelscope.cn/models/depth-anything/Depth-Anything-V2-Large-hf
-#    下载整个仓库到本地，例如 D:\models\DA2-Large
+# 1) 下载原版权重（默认走 ModelScope，支持断点续传；也可 --source hf-mirror / hf）
+python tools/fetch_model.py --out models/DA2-Large
 
 # 2) 导出固定输入尺寸的 ONNX
-python tools/export_onnx.py --model D:\models\DA2-Large --size 756 --out models/depth_anything_v2_large.onnx
+python tools/export_onnx.py --model models/DA2-Large --size 756 --out models/depth_anything_v2_large.onnx
 ```
 
 导出的模型**输入尺寸是固定的**（这里是 756×756）。想要更高清晰度可以导出 1036，但 DirectML 上会慢 3 倍左右（0.44s/帧 → 1.40s/帧），实测白膜成片几乎看不出差别。
@@ -171,6 +168,7 @@ RTX 5070 Ti Laptop（DirectML，756 输入，768×768 素材）：
 video2clay.py          主流程（抽帧 → 深度 → 渲染 → 编码）
 video2clay_gui.py      tkinter 图形界面
 tools/
+  fetch_model.py       从 ModelScope / HF 下载原版权重（断点续传）
   export_onnx.py       从 HF/ModelScope 权重导出固定尺寸 ONNX
   bench_onnx.py        测 DirectML 推理速度
   verify_onnx.py       ONNX 与 torch 输出数值一致性校验
